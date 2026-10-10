@@ -12,12 +12,19 @@ body.participant #info{position:static;width:auto;text-align:left;letter-spacing
 @media(max-width:380px){body.participant #ui{bottom:calc(12px + env(safe-area-inset-bottom))}}
 #flightLayer{display:none;position:fixed;inset:0;z-index:12;pointer-events:none;overflow:hidden;perspective:650px}
 body.participant #flightLayer{display:block}
-.flightWord{position:absolute;left:50%;top:49%;white-space:nowrap;font-family:Georgia,'Yu Mincho',serif;color:#f1eee7;font-size:clamp(27px,9vw,52px);max-width:95vw;text-overflow:ellipsis;overflow:hidden;transform:translate(-50%,-50%) scale(.75);opacity:0;filter:blur(0);animation:wordRelease 1450ms cubic-bezier(.2,.7,.2,1) forwards}
-@keyframes wordRelease{0%{opacity:0;transform:translate(-50%,30%) scale(.75);filter:blur(0)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}45%{opacity:1;transform:translate(-50%,-90%) scale(1)}100%{opacity:0;transform:translate(-50%,-360%) scale(.04);filter:blur(3px)}}
-#released{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:11;pointer-events:none;letter-spacing:.32em;font-size:13px;color:#d9d6d0;animation:releaseFade 1s ease both}
-@keyframes releaseFade{0%{opacity:0}35%{opacity:1}100%{opacity:0}}
+.flightWord{position:absolute;left:50%;top:46%;white-space:nowrap;font-family:Georgia,'Yu Mincho',serif;color:#f1eee7;font-size:clamp(27px,9vw,52px);max-width:95vw;text-overflow:ellipsis;overflow:hidden;text-shadow:0 0 18px #e7f4ff66,0 0 48px #a3cfff33;opacity:0;animation:wordLaunch 1550ms cubic-bezier(.18,.7,.17,1) forwards}
+@keyframes wordLaunch{0%{opacity:0;transform:translate(-50%,70%) scale(.65);filter:blur(3px)}16%{opacity:1;transform:translate(-50%,-50%) scale(1.12);filter:blur(0)}35%{opacity:1;transform:translate(-50%,-55%) scale(1.16)}50%{opacity:1;transform:translate(-50%,-65%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-260%) scale(.02);filter:blur(5px)}}
+.launchRing{position:absolute;left:50%;top:46%;width:120px;height:120px;border:1px solid #d7e9ffb8;border-radius:50%;box-shadow:0 0 22px #a8d9ff55,inset 0 0 24px #b8dfff33;animation:ringBurst 1100ms ease-out forwards}
+.launchRing:before,.launchRing:after{content:"";position:absolute;inset:-12px;border:1px dashed #b7e3ff70;border-radius:50%}.launchRing:after{inset:18px;border-style:solid;opacity:.4}
+@keyframes ringBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.25) rotate(0)}25%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(20deg)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.8) rotate(80deg)}}
+.launchStreak{position:absolute;left:50%;top:46%;width:2px;height:var(--length);background:linear-gradient(0deg,transparent,#d4edffb8,transparent);transform-origin:50% 0;opacity:0;animation:streakFly 1050ms ease-out forwards;animation-delay:var(--delay)}
+@keyframes streakFly{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--angle)) translateY(0) scaleY(.2)}20%{opacity:.95}100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--angle)) translateY(var(--distance)) scaleY(1.8)}}
+.launchFlash{position:absolute;inset:0;background:radial-gradient(circle at 50% 46%,#b7ddff26 0%,transparent 55%);animation:flashPulse 650ms ease-out forwards}
+@keyframes flashPulse{0%{opacity:0}22%{opacity:1}100%{opacity:0}}
+#released{position:fixed;top:24%;left:0;right:0;display:none;justify-content:center;z-index:11;pointer-events:none;letter-spacing:.32em;font-size:12px;color:#d9e8f4;animation:releaseFade 1100ms ease both}
+@keyframes releaseFade{0%{opacity:0;transform:translateY(12px)}40%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
 body.participant #released.visible{display:flex}
-@media(prefers-reduced-motion:reduce){.flightWord{animation-duration:500ms}}
+@media(prefers-reduced-motion:reduce){.flightWord,.launchRing,.launchStreak,.launchFlash{animation-duration:250ms!important}#released{animation-duration:400ms}}
 </style></head><body><div id="stage"></div><div id="flightLayer" aria-hidden="true"></div><div id="released" aria-hidden="true">RELEASED</div><div id="title">WORDS IN COMMON</div><div id="notice"></div><section id="ui" hidden><div id="status">接続中…</div><form id="form"><input id="input" maxlength="36" placeholder="言葉を入力する" aria-label="投稿する言葉" required><button id="send" type="submit">送信</button></form><div id="info">送信された言葉は全員の画面に表示されます。最大36文字。</div></section><div id="setup"><article><h1>WORDS IN COMMON</h1><p>共有インスタレーションの初期設定</p><p>FirebaseのWebアプリ設定を貼り付けてください。Firestoreの設定とセキュリティルールは同梱のREADMEをご確認ください。設定はこのブラウザに保存されます。</p><textarea id="config" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><button id="connect">接続する</button><small id="setupError"></small></article></div><script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {getFirestore,collection,doc,addDoc,onSnapshot,query,orderBy,limit,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
@@ -56,10 +63,23 @@ function render(docs){latestDocs=docs;const keep=new Set();for(const doc of docs
 async function start(cfg){$('setupError').textContent='接続しています…';try{if(!cfg.apiKey||!cfg.projectId||!cfg.appId)throw Error('apiKey、projectId、appIdが必要です。');const app=initializeApp(cfg);db=getFirestore(app);auth=getAuth(app);await signInAnonymously(auth);localStorage.setItem('words-firebase-config',JSON.stringify(cfg));$('setup').hidden=true;$('setup').style.display='none';if($('ui'))$('ui').hidden=false;onSnapshot(doc(db,'settings','display'),snap=>{settingsError='';applyDisplay(snap.exists()?snap.data():{})},err=>{settingsError='演出設定の同期エラー: '+err.message;if($('status'))$('status').textContent=settingsError;console.error(settingsError)});onSnapshot(query(collection(db,'words'),orderBy('createdAt','desc'),limit(500)),snap=>{if($('status'))$('status').textContent=settingsError||'オンライン · 全員と同期中';render(snap.docs)},err=>{if($('status'))$('status').textContent='同期エラー: '+err.message});}catch(e){$('setupError').textContent='接続できません: '+e.message}}
 $('connect').onclick=()=>{try{start(JSON.parse($('config').value))}catch(e){$('setupError').textContent='JSONの形式をご確認ください。'}};
 function releaseWord(value){
- const layer=$('flightLayer'),word=document.createElement('div');word.className='flightWord';word.textContent=value;layer.append(word);
+ const layer=$('flightLayer');
+ const flash=document.createElement('div');flash.className='launchFlash';layer.append(flash);
+ const ring=document.createElement('div');ring.className='launchRing';layer.append(ring);
+ const word=document.createElement('div');word.className='flightWord';word.textContent=value;layer.append(word);
+ for(let i=0;i<22;i++){
+  const streak=document.createElement('div');streak.className='launchStreak';
+  streak.style.setProperty('--angle',(i*360/22+(Math.random()-.5)*16)+'deg');
+  streak.style.setProperty('--length',(14+Math.random()*38)+'px');
+  streak.style.setProperty('--distance',(-85-Math.random()*165)+'px');
+  streak.style.setProperty('--delay',(100+Math.random()*160)+'ms');
+  layer.append(streak);setTimeout(()=>streak.remove(),1450);
+ }
+ flash.addEventListener('animationend',()=>flash.remove(),{once:true});
+ ring.addEventListener('animationend',()=>ring.remove(),{once:true});
  word.addEventListener('animationend',()=>word.remove(),{once:true});
  const released=$('released');released.classList.remove('visible');void released.offsetWidth;released.classList.add('visible');
- setTimeout(()=>released.classList.remove('visible'),1050);
+ setTimeout(()=>released.classList.remove('visible'),1150);
 }
 if(!projector)$('form').addEventListener('submit',async e=>{e.preventDefault();if(submitting||!db||!auth?.currentUser)return;const value=$('input').value.trim().replace(/\s+/g,' ');if(!value||value.length>36)return;submitting=true;$('send').disabled=true;try{await addDoc(collection(db,'words'),{text:value,createdAt:serverTimestamp(),uid:auth.currentUser.uid,seed:Math.floor(Math.random()*1000000000)});$('input').value='';$('input').blur();releaseWord(value);if($('status'))$('status').textContent='ONLINE · CONNECTED'}catch(err){if($('status'))$('status').textContent='送信できません: '+err.message}finally{submitting=false;$('send').disabled=false}});
 start(firebaseConfig);
