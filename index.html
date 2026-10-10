@@ -25,7 +25,10 @@ body.participant #elevatorScene{display:block;position:fixed;inset:0;overflow:hi
 #elevatorFrame:after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:#c0c3c540;transform:translateX(-50%);pointer-events:none}
 #elevatorIndicator{position:absolute;left:50%;top:var(--lift-indicator,15%);transform:translateX(-50%);font-size:10px;letter-spacing:.32em;color:#999da5}
 #elevatorFloor{position:absolute;bottom:0;left:0;right:0;height:20%;background:linear-gradient(0deg,#101115 0%,transparent 100%)}
-#sceneLabel{position:absolute;left:0;right:0;top:var(--lift-label,8%);text-align:center;font-size:11px;letter-spacing:.26em;color:#a6a8ad}
+#sceneLabel{display:none}
+#elevatorCallPanel{position:absolute;left:calc(50% + min(34vw,150px) + 11px);top:var(--lift-center,38%);transform:translateY(-50%);width:24px;height:46px;border:1px solid #53565d;border-radius:3px;background:linear-gradient(115deg,#33363d,#1c1f25);box-shadow:0 2px 9px #0008,inset 0 0 0 2px #25282e;display:flex;align-items:center;justify-content:center}
+.callButton{display:grid;place-items:center;width:15px;height:15px;border:1px solid #85888b;border-radius:50%;color:#c1c2bf;font-size:7px;line-height:1;background:#2a2d32;box-shadow:0 1px 4px #0009}
+.hintLine{display:block}
 #sceneHint{position:absolute;left:50%;width:min(88vw,480px);top:var(--lift-hint,68%);transform:translateX(-50%);text-align:center;font-size:clamp(11px,2.8vw,13px);line-height:1.75;letter-spacing:.035em;color:#c5c5c6;text-wrap:pretty;padding:0 8px}
 body.participant #ui{z-index:7;background:#1a1c22ee;border-color:#51545b}
 body.participant #send{background:#e9e8e3}
@@ -49,7 +52,7 @@ body.participant.launching #elevatorLight{animation:innerLight 2600ms ease-in-ou
 @keyframes releaseFade{0%{opacity:0;transform:translateY(8px)}40%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
 body.participant #released.visible{display:flex}
 @media(prefers-reduced-motion:reduce){body.participant.launching #doorLeft,body.participant.launching #doorRight,body.participant.launching #elevatorLight,#flightLayer .flightWord,#flightLayer .doorGlow,#flightLayer .lightFlood{animation-duration:.4s!important}}
-</style></head><body><div id="stage"></div><div id="elevatorScene" aria-hidden="true"><div id="sceneLabel">WORDS IN COMMON</div><div id="elevatorIndicator">◦ 2026 ◦</div><div id="elevatorFrame"><div id="elevatorLight"></div><div class="elevatorDoor" id="doorLeft"></div><div class="elevatorDoor" id="doorRight"></div></div><div id="sceneHint">今年よかった音楽・映画・本・店・もの・人や、報告したいこと、独り言、意見、大喜利を入力してください。</div><div id="elevatorFloor"></div></div><div id="flightLayer" aria-hidden="true"></div><div id="released" aria-hidden="true">RELEASED</div><div id="title">WORDS IN COMMON</div><div id="notice"></div><section id="ui" hidden><div id="status">接続中…</div><form id="form"><input id="input" maxlength="36" placeholder="言葉を入力する" aria-label="投稿する言葉" required><button id="send" type="submit">送信</button></form><div id="info">送信された言葉は全員の画面に表示されます。最大36文字。</div></section><div id="setup"><article><h1>WORDS IN COMMON</h1><p>共有インスタレーションの初期設定</p><p>FirebaseのWebアプリ設定を貼り付けてください。Firestoreの設定とセキュリティルールは同梱のREADMEをご確認ください。設定はこのブラウザに保存されます。</p><textarea id="config" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><button id="connect">接続する</button><small id="setupError"></small></article></div><script type="module">
+</style></head><body><div id="stage"></div><div id="elevatorScene" aria-hidden="true"><div id="elevatorIndicator">◦ 2026 ◦</div><div id="elevatorFrame"><div id="elevatorLight"></div><div class="elevatorDoor" id="doorLeft"></div><div class="elevatorDoor" id="doorRight"></div></div><div id="elevatorCallPanel"><span class="callButton" aria-hidden="true">▲</span></div><div id="sceneHint">今年よかった音楽・映画・本・店・もの・人や、<span class="hintLine">報告したいこと、</span><span class="hintLine">独り言、意見、大喜利を入力してください。</span></div><div id="elevatorFloor"></div></div><div id="flightLayer" aria-hidden="true"></div><div id="released" aria-hidden="true">RELEASED</div><div id="title">WORDS IN COMMON</div><div id="notice"></div><section id="ui" hidden><div id="status">接続中…</div><form id="form"><input id="input" maxlength="36" placeholder="言葉を入力する" aria-label="投稿する言葉" required><button id="send" type="submit">送信</button></form><div id="info">送信された言葉は全員の画面に表示されます。最大36文字。</div></section><div id="setup"><article><h1>WORDS IN COMMON</h1><p>共有インスタレーションの初期設定</p><p>FirebaseのWebアプリ設定を貼り付けてください。Firestoreの設定とセキュリティルールは同梱のREADMEをご確認ください。設定はこのブラウザに保存されます。</p><textarea id="config" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><button id="connect">接続する</button><small id="setupError"></small></article></div><script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {getFirestore,collection,doc,addDoc,onSnapshot,query,orderBy,limit,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 import {getAuth,signInAnonymously} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
@@ -73,8 +76,8 @@ if(!projector){
   const topEdge=Math.max(40,Math.min(90,window.innerHeight*.10));
   const bottomEdge=Math.max(topEdge+90,panelTop-24);
   const room=Math.max(110,bottomEdge-topEdge);
-  const height=Math.max(90,Math.min(440,room*.73,window.innerWidth*.94));
-  const center=topEdge+room*.50;
+  const height=Math.max(90,Math.min(440,room*.58,window.innerWidth*.94));
+  const center=topEdge+room*.38;
   const scene=document.getElementById('elevatorScene');
   for(const el of [scene,document.getElementById('flightLayer')]){
    el.style.setProperty('--lift-center',center+'px');
@@ -82,7 +85,7 @@ if(!projector){
   scene.style.setProperty('--lift-height',height+'px');
   scene.style.setProperty('--lift-indicator',(center-height/2-27)+'px');
   scene.style.setProperty('--lift-hint',(center+height/2+13)+'px');
-  scene.style.setProperty('--lift-label',Math.max(18,topEdge-32)+'px');
+  
  };
  window.addEventListener('resize',updateLiftLayout);
  window.visualViewport?.addEventListener('resize',updateLiftLayout);
