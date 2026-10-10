@@ -23,11 +23,20 @@ body.participant #elevatorScene{display:block;position:fixed;inset:0;overflow:hi
 #doorLeft{left:0;border-right:1px solid #8e939a66}
 #doorRight{right:0;border-left:1px solid #16181c}
 #elevatorFrame:after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:#c0c3c540;transform:translateX(-50%);pointer-events:none}
-#elevatorIndicator{position:absolute;left:50%;top:var(--lift-indicator,15%);transform:translateX(-50%);font-size:10px;letter-spacing:.32em;color:#999da5}
+#elevatorIndicator{position:absolute;left:50%;top:var(--lift-indicator,15%);transform:translateX(-50%);display:flex;gap:3px;padding:5px 9px 6px;border:1px solid #41464b;border-radius:2px;background:#090c0e;box-shadow:inset 0 1px 5px #000,0 1px 2px #ffffff0c;white-space:nowrap}
+.segDigit{position:relative;display:inline-block;width:13px;height:22px;filter:drop-shadow(0 0 2px #f4b55b33)}
+.seg{position:absolute;background:#e3ad64;box-shadow:0 0 4px #e3ad6477;opacity:.9}
+.seg.a,.seg.d,.seg.g{left:3px;width:7px;height:2px;clip-path:polygon(20% 0,80% 0,100% 50%,80% 100%,20% 100%,0 50%)}
+.seg.a{top:1px}.seg.g{top:10px}.seg.d{top:19px}
+.seg.b,.seg.c,.seg.e,.seg.f{width:2px;height:8px;clip-path:polygon(50% 0,100% 18%,100% 82%,50% 100%,0 82%,0 18%)}
+.seg.f{left:1px;top:2px}.seg.b{right:1px;top:2px}.seg.e{left:1px;top:11px}.seg.c{right:1px;top:11px}
+.segDigit[data-n="2"] .seg.c,.segDigit[data-n="2"] .seg.f,.segDigit[data-n="0"] .seg.g,.segDigit[data-n="6"] .seg.b{opacity:.045;box-shadow:none}
+
 #elevatorFloor{position:absolute;bottom:0;left:0;right:0;height:20%;background:linear-gradient(0deg,#101115 0%,transparent 100%)}
 #sceneLabel{display:none}
-#elevatorCallPanel{position:absolute;left:calc(50% + min(34vw,150px) + 11px);top:var(--lift-center,38%);transform:translateY(-50%);width:24px;height:46px;border:1px solid #53565d;border-radius:3px;background:linear-gradient(115deg,#33363d,#1c1f25);box-shadow:0 2px 9px #0008,inset 0 0 0 2px #25282e;display:flex;align-items:center;justify-content:center}
+#elevatorCallPanel{position:absolute;left:calc(50% + min(34vw,150px) + 11px);top:var(--lift-center,38%);transform:translateY(-50%);width:29px;height:72px;border:1px solid #53565d;border-radius:3px;background:linear-gradient(115deg,#33363d,#1c1f25);box-shadow:0 2px 9px #0008,inset 0 0 0 2px #25282e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px}
 .callButton{display:grid;place-items:center;width:15px;height:15px;border:1px solid #85888b;border-radius:50%;color:#c1c2bf;font-size:7px;line-height:1;background:#2a2d32;box-shadow:0 1px 4px #0009}
+.callButton.openButton{font-size:9px;letter-spacing:-3px;padding-right:3px;color:#d2d1c9}
 .hintLine{display:block}
 #sceneHint{position:absolute;left:50%;width:min(88vw,480px);top:var(--lift-hint,68%);transform:translateX(-50%);text-align:center;font-size:clamp(11px,2.8vw,13px);line-height:1.75;letter-spacing:.035em;color:#c5c5c6;text-wrap:pretty;padding:0 8px}
 body.participant #ui{z-index:7;background:#1a1c22ee;border-color:#51545b}
@@ -48,11 +57,8 @@ body.participant.launching #elevatorLight{animation:innerLight 2600ms ease-in-ou
 @keyframes doorLeftOpen{0%,8%{transform:translateX(0)}52%,83%{transform:translateX(-94%)}100%{transform:translateX(0)}}
 @keyframes doorRightOpen{0%,8%{transform:translateX(0)}52%,83%{transform:translateX(94%)}100%{transform:translateX(0)}}
 @keyframes innerLight{0%{opacity:.12}40%,85%{opacity:1}100%{opacity:.12}}
-#released{position:fixed;left:0;right:0;top:20%;display:none;justify-content:center;z-index:13;pointer-events:none;letter-spacing:.28em;font-size:11px;color:#e5e5e0;animation:releaseFade 1000ms ease both}
-@keyframes releaseFade{0%{opacity:0;transform:translateY(8px)}40%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
-body.participant #released.visible{display:flex}
 @media(prefers-reduced-motion:reduce){body.participant.launching #doorLeft,body.participant.launching #doorRight,body.participant.launching #elevatorLight,#flightLayer .flightWord,#flightLayer .doorGlow,#flightLayer .lightFlood{animation-duration:.4s!important}}
-</style></head><body><div id="stage"></div><div id="elevatorScene" aria-hidden="true"><div id="elevatorIndicator">◦ 2026 ◦</div><div id="elevatorFrame"><div id="elevatorLight"></div><div class="elevatorDoor" id="doorLeft"></div><div class="elevatorDoor" id="doorRight"></div></div><div id="elevatorCallPanel"><span class="callButton" aria-hidden="true">▲</span></div><div id="sceneHint">今年よかった音楽・映画・本・店・もの・人や、<span class="hintLine">報告したいこと、独り言、意見、大喜利を入力してください。</span></div><div id="elevatorFloor"></div></div><div id="flightLayer" aria-hidden="true"></div><div id="released" aria-hidden="true">RELEASED</div><div id="title">WORDS IN COMMON</div><div id="notice"></div><section id="ui" hidden><div id="status">接続中…</div><form id="form"><input id="input" maxlength="36" placeholder="言葉を入力する" aria-label="投稿する言葉" required><button id="send" type="submit">送信</button></form><div id="info">送信された言葉は全員の画面に表示されます。最大36文字。</div></section><div id="setup"><article><h1>WORDS IN COMMON</h1><p>共有インスタレーションの初期設定</p><p>FirebaseのWebアプリ設定を貼り付けてください。Firestoreの設定とセキュリティルールは同梱のREADMEをご確認ください。設定はこのブラウザに保存されます。</p><textarea id="config" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><button id="connect">接続する</button><small id="setupError"></small></article></div><script type="module">
+</style></head><body><div id="stage"></div><div id="elevatorScene" aria-hidden="true"><div id="elevatorIndicator" aria-label="2026"><span class="segDigit" data-n="2"><i class="seg a"></i><i class="seg b"></i><i class="seg c"></i><i class="seg d"></i><i class="seg e"></i><i class="seg f"></i><i class="seg g"></i></span><span class="segDigit" data-n="0"><i class="seg a"></i><i class="seg b"></i><i class="seg c"></i><i class="seg d"></i><i class="seg e"></i><i class="seg f"></i><i class="seg g"></i></span><span class="segDigit" data-n="2"><i class="seg a"></i><i class="seg b"></i><i class="seg c"></i><i class="seg d"></i><i class="seg e"></i><i class="seg f"></i><i class="seg g"></i></span><span class="segDigit" data-n="6"><i class="seg a"></i><i class="seg b"></i><i class="seg c"></i><i class="seg d"></i><i class="seg e"></i><i class="seg f"></i><i class="seg g"></i></span></div><div id="elevatorFrame"><div id="elevatorLight"></div><div class="elevatorDoor" id="doorLeft"></div><div class="elevatorDoor" id="doorRight"></div></div><div id="elevatorCallPanel"><span class="callButton" aria-hidden="true">▲</span><span class="callButton openButton" aria-hidden="true">◀▶</span></div><div id="sceneHint">今年よかった音楽・映画・本・店・もの・人や、<span class="hintLine">報告したいこと、独り言、意見、大喜利を入力してください。</span></div><div id="elevatorFloor"></div></div><div id="flightLayer" aria-hidden="true"></div><div id="title">WORDS IN COMMON</div><div id="notice"></div><section id="ui" hidden><div id="status">接続中…</div><form id="form"><input id="input" maxlength="36" placeholder="言葉を入力する" aria-label="投稿する言葉" required><button id="send" type="submit">送信</button></form><div id="info">送信された言葉は全員の画面に表示されます。最大36文字。</div></section><div id="setup"><article><h1>WORDS IN COMMON</h1><p>共有インスタレーションの初期設定</p><p>FirebaseのWebアプリ設定を貼り付けてください。Firestoreの設定とセキュリティルールは同梱のREADMEをご確認ください。設定はこのブラウザに保存されます。</p><textarea id="config" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><button id="connect">接続する</button><small id="setupError"></small></article></div><script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {getFirestore,collection,doc,addDoc,onSnapshot,query,orderBy,limit,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 import {getAuth,signInAnonymously} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
@@ -127,11 +133,8 @@ function releaseWord(value){
  const glow=document.createElement('div');glow.className='doorGlow';layer.append(glow);
  const flood=document.createElement('div');flood.className='lightFlood';layer.append(flood);
  const word=document.createElement('div');word.className='flightWord';word.textContent=value;layer.append(word);
- const released=$('released');released.classList.remove('visible');
  launchCleanup=setTimeout(()=>{
   document.body.classList.remove('launching');layer.replaceChildren();
-  released.classList.add('visible');
-  setTimeout(()=>released.classList.remove('visible'),1050);
   launchCleanup=null;
  },2650);
 }
