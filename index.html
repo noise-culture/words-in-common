@@ -1,6 +1,6 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WORDS IN COMMON</title><style>:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#101014;color:#eae8e2;font-family:system-ui,-apple-system,sans-serif;overflow:hidden}#stage{position:fixed;inset:0;overflow:hidden}.word{position:absolute;white-space:nowrap;pointer-events:none;font-family:Georgia,'Yu Mincho',serif;will-change:transform;transform-origin:center}#ui{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:min(94vw,580px);background:#202026e8;border:1px solid #45454b;border-radius:18px;padding:14px;backdrop-filter:blur(12px)}form{display:flex;gap:8px}input{flex:1;min-width:0;padding:13px;background:#111116;color:white;border:1px solid #56565d;border-radius:10px;font-size:16px}button{padding:12px 17px;border:0;border-radius:10px;background:#eae8e2;color:#151519;font-weight:600;cursor:pointer}button:disabled{opacity:.5}#status{font-size:12px;color:#b6b4b0;margin:0 0 10px}#info{font-size:11px;color:#b6b4b0;margin:9px 0 0}#title{position:fixed;top:22px;left:24px;letter-spacing:.2em;font-size:11px;color:#a9a6a3}#notice{position:fixed;top:22px;right:20px;font-size:12px;color:#b6b4b0}#setup{position:fixed;inset:0;z-index:10;background:#101014;display:flex;align-items:center;justify-content:center;padding:24px}#setup article{max-width:540px;line-height:1.8}code{font-size:12px;word-break:break-all;color:#d8d3bd}a{color:#d8d3bd}#setup h1{font-size:24px;font-weight:400}#setup p{color:#c3c0b9}#setup textarea{width:100%;height:180px;background:#202026;color:#fff;border:1px solid #666;border-radius:8px;padding:12px;font:12px monospace}#setup button{margin-top:10px}#setup small{display:block;color:#aaa;margin-top:8px}#world{position:fixed;inset:0;overflow:hidden;touch-action:none;cursor:grab}#world:active{cursor:grabbing}#world #stage{position:absolute;inset:auto;width:1600px;height:900px;transform-origin:0 0}#resetView{position:fixed;right:14px;bottom:170px;z-index:6;background:#29292f;color:white;border:1px solid #777;padding:9px 12px;font-size:12px}body.projector #world #stage{width:100%;height:100%;transform:none!important}body.projector #resetView{display:none}@media(min-width:768px){#resetView{display:none}}#ui{z-index:7}#title,#notice{z-index:5}
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WORDS IN COMMON</title><style>:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#101014;color:#eae8e2;font-family:system-ui,-apple-system,sans-serif;overflow:hidden}#stage{position:fixed;inset:0;overflow:hidden}.word{position:absolute;white-space:nowrap;pointer-events:none;font-family:Georgia,'Yu Mincho',serif;will-change:transform;transform-origin:center}#ui{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:min(94vw,580px);background:#202026e8;border:1px solid #45454b;border-radius:18px;padding:14px;backdrop-filter:blur(12px)}form{display:flex;gap:8px}input{flex:1;min-width:0;padding:13px;background:#111116;color:white;border:1px solid #56565d;border-radius:10px;font-size:16px}button{padding:12px 17px;border:0;border-radius:10px;background:#eae8e2;color:#151519;font-weight:600;cursor:pointer}button:disabled{opacity:.5}#status{font-size:12px;color:#b6b4b0;margin:0 0 10px}#info{font-size:11px;color:#b6b4b0;margin:9px 0 0}#title{position:fixed;top:22px;left:24px;letter-spacing:.2em;font-size:11px;color:#a9a6a3}#notice{position:fixed;top:22px;right:20px;font-size:12px;color:#b6b4b0}#setup{position:fixed;inset:0;z-index:10;background:#101014;display:flex;align-items:center;justify-content:center;padding:24px}#setup article{max-width:540px;line-height:1.8}code{font-size:12px;word-break:break-all;color:#d8d3bd}a{color:#d8d3bd}#setup h1{font-size:24px;font-weight:400}#setup p{color:#c3c0b9}#setup textarea{width:100%;height:180px;background:#202026;color:#fff;border:1px solid #666;border-radius:8px;padding:12px;font:12px monospace}#setup button{margin-top:10px}#setup small{display:block;color:#aaa;margin-top:8px}#ui{z-index:7}#title,#notice{z-index:5}
 /* Participant-only transmission interface */
-body.participant #world,body.participant #resetView,body.participant #title,body.participant #notice{display:none!important}
+body.participant #stage,body.participant #title,body.participant #notice{display:none!important}
 body.participant{background:#101014;overflow:hidden}
 body.participant #ui{position:fixed;inset:0;transform:none;width:100%;height:100%;height:100dvh;max-width:none;border:0;border-radius:0;background:transparent;backdrop-filter:none;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:7}
 body.participant #ui[hidden]{display:none}
@@ -21,7 +21,7 @@ body.participant #flightLayer{display:block}
 @keyframes releaseFade{0%{opacity:0}35%{opacity:1}100%{opacity:0}}
 body.participant #released.visible{display:flex}
 @media(prefers-reduced-motion:reduce){.flightWord{animation-duration:500ms}}
-</style></head><body><div id="world"><div id="stage"></div></div><div id="flightLayer" aria-hidden="true"></div><div id="released" aria-hidden="true">RELEASED</div><button id="resetView" type="button">全体表示</button><div id="title">WORDS IN COMMON</div><div id="notice"></div><section id="ui" hidden><div id="status">接続中…</div><form id="form"><input id="input" maxlength="36" placeholder="言葉を入力する" aria-label="投稿する言葉" required><button id="send" type="submit">送信</button></form><div id="info">送信された言葉は全員の画面に表示されます。最大36文字。</div></section><div id="setup"><article><h1>WORDS IN COMMON</h1><p>共有インスタレーションの初期設定</p><p>FirebaseのWebアプリ設定を貼り付けてください。Firestoreの設定とセキュリティルールは同梱のREADMEをご確認ください。設定はこのブラウザに保存されます。</p><textarea id="config" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><button id="connect">接続する</button><small id="setupError"></small></article></div><script type="module">
+</style></head><body><div id="stage"></div><div id="flightLayer" aria-hidden="true"></div><div id="released" aria-hidden="true">RELEASED</div><div id="title">WORDS IN COMMON</div><div id="notice"></div><section id="ui" hidden><div id="status">接続中…</div><form id="form"><input id="input" maxlength="36" placeholder="言葉を入力する" aria-label="投稿する言葉" required><button id="send" type="submit">送信</button></form><div id="info">送信された言葉は全員の画面に表示されます。最大36文字。</div></section><div id="setup"><article><h1>WORDS IN COMMON</h1><p>共有インスタレーションの初期設定</p><p>FirebaseのWebアプリ設定を貼り付けてください。Firestoreの設定とセキュリティルールは同梱のREADMEをご確認ください。設定はこのブラウザに保存されます。</p><textarea id="config" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","appId":"..."}'></textarea><button id="connect">接続する</button><small id="setupError"></small></article></div><script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {getFirestore,collection,doc,addDoc,onSnapshot,query,orderBy,limit,serverTimestamp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 import {getAuth,signInAnonymously} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
@@ -50,32 +50,6 @@ function applyDisplay(data){
  render(latestDocs);
 }
 
-
-// Fixed 1600 x 900 shared canvas, with independent mobile camera.
-const world=document.getElementById('world');
-const mobileCamera=false; // Participant view uses a dedicated release interface.
-let cam={x:0,y:0,s:1},touches=new Map(),previousPinch=null;
-const bound=(v,min,max)=>Math.max(min,Math.min(max,v));
-function cameraLimits(){const w=world.clientWidth,h=world.clientHeight;
- const minScale=Math.min(w/1600,h/900);
- cam.s=bound(cam.s,minScale,3);
- const ww=1600*cam.s,hh=900*cam.s;
- cam.x=ww<=w?(w-ww)/2:bound(cam.x,w-ww,0);
- cam.y=hh<=h?(h-hh)/2:bound(cam.y,h-hh,0);
-}
-function applyCamera(){if(!mobileCamera)return;cameraLimits();stage.style.transform=`translate(${cam.x}px,${cam.y}px) scale(${cam.s})`}
-function resetCamera(){if(!mobileCamera)return;cam.s=Math.min(world.clientWidth/1600,world.clientHeight/900);cam.x=0;cam.y=0;applyCamera()}
-if(mobileCamera){
- // Start zoomed in enough that the visitor can actually pan in both axes.
- cam.s=Math.max(world.clientWidth/1600,world.clientHeight/900)*1.65;
- cam.x=(world.clientWidth-1600*cam.s)/2;cam.y=(world.clientHeight-900*cam.s)/2;applyCamera();
- world.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;world.setPointerCapture(e.pointerId);touches.set(e.pointerId,{x:e.clientX,y:e.clientY});previousPinch=null});
- world.addEventListener('pointermove',e=>{if(!touches.has(e.pointerId))return;const prev=touches.get(e.pointerId);touches.set(e.pointerId,{x:e.clientX,y:e.clientY});const a=[...touches.values()];if(a.length===1){cam.x+=e.clientX-prev.x;cam.y+=e.clientY-prev.y}else if(a.length>=2){const cx=(a[0].x+a[1].x)/2,cy=(a[0].y+a[1].y)/2,d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(previousPinch&&previousPinch.d){const next=bound(cam.s*d/previousPinch.d,.1,3);cam.x=cx-(cx-cam.x)*next/cam.s;cam.y=cy-(cy-cam.y)*next/cam.s;cam.s=next}previousPinch={d}}applyCamera()});
- const end=e=>{touches.delete(e.pointerId);previousPinch=null};for(const event of ['pointerup','pointercancel','lostpointercapture'])world.addEventListener(event,end);
- document.getElementById('resetView').onclick=resetCamera;
- world.addEventListener('dblclick',resetCamera);
- window.addEventListener('resize',applyCamera);
-}else{if(!projector){stage.style.width='100%';stage.style.height='100%';stage.style.transform='none'}document.getElementById('resetView').style.display='none'}
 
 function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
 function rand(seed,n){let x=Math.sin(seed*0.0001+n*78.233)*43758.5453123;return x-Math.floor(x)}
