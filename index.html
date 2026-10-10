@@ -17,25 +17,25 @@ body.participant{background:#101115}
 #elevatorScene{display:none}
 body.participant #elevatorScene{display:block;position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 43%,#24272d 0%,#15171c 48%,#0d0e12 100%)}
 #elevatorScene:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0,transparent 43px,#ffffff04 44px,transparent 45px);opacity:.4}
-#elevatorFrame{position:absolute;left:50%;top:45%;width:min(68vw,300px);height:min(54vh,440px);transform:translate(-50%,-50%);border:6px solid #454951;border-bottom-width:8px;box-shadow:0 0 0 1px #777b8455,0 14px 65px #0009,inset 0 0 15px #000;overflow:hidden;background:#070b10}
+#elevatorFrame{position:absolute;left:50%;top:var(--lift-center,38%);width:min(68vw,300px);height:var(--lift-height,min(44vh,370px));transform:translate(-50%,-50%);border:6px solid #454951;border-bottom-width:8px;box-shadow:0 0 0 1px #777b8455,0 14px 65px #0009,inset 0 0 15px #000;overflow:hidden;background:#070b10}
 #elevatorLight{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 52%,#f5f1e3 0%,#d3d9d8 35%,#8c9ca6 85%);opacity:.12}
 .elevatorDoor{position:absolute;top:0;bottom:0;width:50%;background:linear-gradient(90deg,#35383f,#555962 55%,#373b43);box-shadow:inset 0 0 25px #1119;will-change:transform}
 #doorLeft{left:0;border-right:1px solid #8e939a66}
 #doorRight{right:0;border-left:1px solid #16181c}
 #elevatorFrame:after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:#c0c3c540;transform:translateX(-50%);pointer-events:none}
-#elevatorIndicator{position:absolute;left:50%;top:calc(45% - min(27vh,220px) - 28px);transform:translateX(-50%);font-size:10px;letter-spacing:.32em;color:#999da5}
+#elevatorIndicator{position:absolute;left:50%;top:var(--lift-indicator,15%);transform:translateX(-50%);font-size:10px;letter-spacing:.32em;color:#999da5}
 #elevatorFloor{position:absolute;bottom:0;left:0;right:0;height:20%;background:linear-gradient(0deg,#101115 0%,transparent 100%)}
-#sceneLabel{position:absolute;left:0;right:0;top:12%;text-align:center;font-size:11px;letter-spacing:.26em;color:#a6a8ad}
-#sceneHint{position:absolute;left:0;right:0;top:calc(45% + min(27vh,220px) + 16px);text-align:center;font-size:10px;letter-spacing:.16em;color:#858991}
+#sceneLabel{position:absolute;left:0;right:0;top:var(--lift-label,8%);text-align:center;font-size:11px;letter-spacing:.26em;color:#a6a8ad}
+#sceneHint{position:absolute;left:0;right:0;top:var(--lift-hint,68%);text-align:center;font-size:10px;letter-spacing:.16em;color:#858991}
 body.participant #ui{z-index:7;background:#1a1c22ee;border-color:#51545b}
 body.participant #send{background:#e9e8e3}
 #flightLayer{display:none;position:fixed;inset:0;z-index:12;pointer-events:none;overflow:hidden}
 body.participant #flightLayer{display:block}
 #promptText{font-size:13px;line-height:1.75;letter-spacing:.015em;color:#e7e4df;margin:0 0 16px;text-wrap:pretty}
 body.participant #ui{background:#1a1c22f0}
-#flightLayer .flightWord{position:absolute;left:50%;top:43%;max-width:90vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:clamp(25px,8vw,46px) Georgia,'Yu Mincho',serif;color:#fffef9;text-shadow:0 0 20px #fff9;opacity:0;animation:intoLight 2400ms cubic-bezier(.22,.55,.15,1) both}
+#flightLayer .flightWord{position:absolute;left:50%;top:var(--lift-center,38%);max-width:90vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:clamp(25px,8vw,46px) Georgia,'Yu Mincho',serif;color:#fffef9;text-shadow:0 0 20px #fff9;opacity:0;animation:intoLight 2400ms cubic-bezier(.22,.55,.15,1) both}
 @keyframes intoLight{0%,12%{opacity:0;transform:translate(-50%,30%) scale(.85)}26%{opacity:1;transform:translate(-50%,-50%) scale(1)}49%{opacity:1;transform:translate(-50%,-50%) scale(.95)}77%{opacity:.7;transform:translate(-50%,-50%) scale(.44);filter:blur(1px)}100%{opacity:0;transform:translate(-50%,-50%) scale(.06);filter:blur(8px)}}
-#flightLayer .doorGlow{position:absolute;inset:0;background:radial-gradient(ellipse 18% 30% at 50% 43%,#fffef2 0%,#f7f7ecdb 23%,#c7d5dc6b 54%,transparent 100%);opacity:0;animation:lightSpread 2600ms ease-in-out both}
+#flightLayer .doorGlow{position:absolute;inset:0;background:radial-gradient(ellipse 18% 30% at 50% var(--lift-center,38%),#fffef2 0%,#f7f7ecdb 23%,#c7d5dc6b 54%,transparent 100%);opacity:0;animation:lightSpread 2600ms ease-in-out both}
 @keyframes lightSpread{0%,10%{opacity:0;transform:scale(.12)}29%{opacity:.55;transform:scale(.55)}50%{opacity:.8;transform:scale(1.15)}76%{opacity:1;transform:scale(3.8)}88%{opacity:1;transform:scale(8)}100%{opacity:0;transform:scale(9)}}
 #flightLayer .lightFlood{position:absolute;inset:-10%;background:#f5f5ed;opacity:0;animation:flood 2600ms ease-in-out both}
 @keyframes flood{0%,47%{opacity:0}75%{opacity:.55}86%{opacity:.95}100%{opacity:0}}
@@ -64,6 +64,32 @@ const firebaseConfig = {
 const projector=new URLSearchParams(location.search).get('view')==='projector';
 if(!projector)document.body.classList.add('participant');
 if(projector){document.body.classList.add('projector');document.getElementById('ui').remove();document.getElementById('title').style.display='none';document.getElementById('notice').style.display='none'}
+// Fit the elevator entirely above the input panel, including on small iPhones.
+if(!projector){
+ const updateLiftLayout=()=>{
+  const panel=document.getElementById('ui');
+  if(!panel||panel.hidden)return;
+  const panelTop=panel.getBoundingClientRect().top;
+  const topEdge=Math.max(40,Math.min(90,window.innerHeight*.10));
+  const bottomEdge=Math.max(topEdge+90,panelTop-24);
+  const room=Math.max(110,bottomEdge-topEdge);
+  const height=Math.max(90,Math.min(440,room*.73,window.innerWidth*.94));
+  const center=topEdge+room*.50;
+  const scene=document.getElementById('elevatorScene');
+  for(const el of [scene,document.getElementById('flightLayer')]){
+   el.style.setProperty('--lift-center',center+'px');
+  }
+  scene.style.setProperty('--lift-height',height+'px');
+  scene.style.setProperty('--lift-indicator',(center-height/2-27)+'px');
+  scene.style.setProperty('--lift-hint',(center+height/2+13)+'px');
+  scene.style.setProperty('--lift-label',Math.max(18,topEdge-32)+'px');
+ };
+ window.addEventListener('resize',updateLiftLayout);
+ window.visualViewport?.addEventListener('resize',updateLiftLayout);
+ new ResizeObserver(updateLiftLayout).observe(document.getElementById('ui'));
+ requestAnimationFrame(updateLiftLayout);
+}
+
 const $=id=>document.getElementById(id), stage=$('stage');let db,auth,submitting=false;const items=new Map();const epoch=Date.now();
 const defaults={speed:1,fontSize:1,maxWords:150,bgColor:'#101014',textColor:'#f1eee7',paused:false,hidden:false};
 let display={...defaults},motionTime=0,lastFrame=0,latestDocs=[],settingsError='';
@@ -84,7 +110,7 @@ function rand(seed,n){let x=Math.sin(seed*0.0001+n*78.233)*43758.5453123;return 
 function draw(){const t=motionTime;for(const [id,obj] of items){const {el,seed}=obj;const x=10+rand(seed,1)*80+Math.sin(t*.13+rand(seed,3)*6.28)*5;const y=12+rand(seed,2)*70+Math.cos(t*.11+rand(seed,4)*6.28)*5;const angle=Math.sin(t*.07+rand(seed,5)*6.28)*9;el.style.left=x+'%';el.style.top=y+'%';el.style.transform=`translate(-50%,-50%) rotate(${angle}deg)`;el.style.opacity=String(.55+Math.sin(t*.22+rand(seed,6)*6.28)*.18)}}
 function animate(now){if(lastFrame&&!display.paused)motionTime+=Math.min((now-lastFrame)/1000,.1)*display.speed;lastFrame=now;draw();requestAnimationFrame(animate)}requestAnimationFrame(animate);
 function render(docs){latestDocs=docs;const keep=new Set();for(const doc of docs.slice(0,display.maxWords)){const data=doc.data();if(typeof data.text!=='string'||data.hidden===true)continue;const id=doc.id;keep.add(id);if(!items.has(id)){const seed=(typeof data.seed==='number' ? data.seed : hash(id)),el=document.createElement('div');el.className='word';el.textContent=data.text;stage.append(el);items.set(id,{el,seed})}const obj=items.get(id);obj.el.style.fontSize=((18+rand(obj.seed,7)*34)*display.fontSize)+'px';obj.el.style.color=display.textColor;}for(const [id,obj] of items){if(!keep.has(id)){obj.el.remove();items.delete(id)}}if($('notice'))$('notice').textContent=`${items.size} WORDS`}
-async function start(cfg){$('setupError').textContent='接続しています…';try{if(!cfg.apiKey||!cfg.projectId||!cfg.appId)throw Error('apiKey、projectId、appIdが必要です。');const app=initializeApp(cfg);db=getFirestore(app);auth=getAuth(app);await signInAnonymously(auth);localStorage.setItem('words-firebase-config',JSON.stringify(cfg));$('setup').hidden=true;$('setup').style.display='none';if($('ui'))$('ui').hidden=false;onSnapshot(doc(db,'settings','display'),snap=>{settingsError='';applyDisplay(snap.exists()?snap.data():{})},err=>{settingsError='演出設定の同期エラー: '+err.message;if($('status'))$('status').textContent=settingsError;console.error(settingsError)});onSnapshot(query(collection(db,'words'),orderBy('createdAt','desc'),limit(500)),snap=>{if($('status'))$('status').textContent=settingsError||'オンライン · 全員と同期中';render(snap.docs)},err=>{if($('status'))$('status').textContent='同期エラー: '+err.message});}catch(e){$('setupError').textContent='接続できません: '+e.message}}
+async function start(cfg){$('setupError').textContent='接続しています…';try{if(!cfg.apiKey||!cfg.projectId||!cfg.appId)throw Error('apiKey、projectId、appIdが必要です。');const app=initializeApp(cfg);db=getFirestore(app);auth=getAuth(app);await signInAnonymously(auth);localStorage.setItem('words-firebase-config',JSON.stringify(cfg));$('setup').hidden=true;$('setup').style.display='none';if($('ui'))$('ui').hidden=false;window.dispatchEvent(new Event('resize'));onSnapshot(doc(db,'settings','display'),snap=>{settingsError='';applyDisplay(snap.exists()?snap.data():{})},err=>{settingsError='演出設定の同期エラー: '+err.message;if($('status'))$('status').textContent=settingsError;console.error(settingsError)});onSnapshot(query(collection(db,'words'),orderBy('createdAt','desc'),limit(500)),snap=>{if($('status'))$('status').textContent=settingsError||'オンライン · 全員と同期中';render(snap.docs)},err=>{if($('status'))$('status').textContent='同期エラー: '+err.message});}catch(e){$('setupError').textContent='接続できません: '+e.message}}
 $('connect').onclick=()=>{try{start(JSON.parse($('config').value))}catch(e){$('setupError').textContent='JSONの形式をご確認ください。'}};
 let launchCleanup=null;
 function releaseWord(value){
