@@ -155,17 +155,26 @@ function draw(){
  const scaleX=previousWidth?W/previousWidth:1,scaleY=previousHeight?H/previousHeight:1;
  previousWidth=W;previousHeight=H;
  const flock=[...items.values()];
+ // Fit long submissions inside the projector without changing their content.
+ // Recalculate on resize and whenever the admin changes font size.
+ const maxTextWidth=Math.max(80,W*.86);
+ for(const obj of flock){
+  const el=obj.el;
+  const base=(18+rand(obj.seed,7)*34)*display.fontSize;
+  el.style.fontSize=base+'px';
+  const naturalWidth=el.scrollWidth;
+  if(naturalWidth>maxTextWidth){
+   el.style.fontSize=Math.max(7,base*maxTextWidth/naturalWidth*.97)+'px';
+  }
+ }
  for(const obj of flock){
   const {el,seed}=obj;
-  if(!obj.w||!obj.h||obj.measureText!==el.textContent||obj.measureSize!==el.style.fontSize){
-   obj.w=el.offsetWidth;obj.h=el.offsetHeight;
-   obj.measureText=el.textContent;obj.measureSize=el.style.fontSize;
-  }
+  obj.w=el.offsetWidth;obj.h=el.offsetHeight;
   if(obj.x===undefined){obj.x=W*(.12+rand(seed,1)*.76);obj.y=H*(.12+rand(seed,2)*.76);obj.vx=0;obj.vy=0}
   else if(scaleX!==1||scaleY!==1){obj.x*=scaleX;obj.y*=scaleY}
  }
  // Spatial hash: only nearby words need to repel one another.
- const cellSize=170,grid=new Map();
+ const cellSize=Math.max(170,...flock.map(o=>o.w/2+40)),grid=new Map();
  for(let i=0;i<flock.length;i++){
   const o=flock[i],cx=Math.floor(o.x/cellSize),cy=Math.floor(o.y/cellSize);
   const key=cx+','+cy;if(!grid.has(key))grid.set(key,[]);grid.get(key).push(i);
@@ -212,7 +221,7 @@ function draw(){
    if(mag>maxV){o.vx*=maxV/mag;o.vy*=maxV/mag}
    o.x+=o.vx*dt;o.y+=o.vy*dt;
   }
-  o.x=Math.max(Math.min(W*.48,o.w/2+6),Math.min(W-Math.min(W*.48,o.w/2+6),o.x));
+  o.x=Math.max(o.w/2+6,Math.min(W-o.w/2-6,o.x));
   o.y=Math.max(Math.min(H*.48,o.h/2+6),Math.min(H-Math.min(H*.48,o.h/2+6),o.y));
   o.el.style.left=o.x+'px';o.el.style.top=o.y+'px';
   o.el.style.transform='translate(-50%,-50%)';
