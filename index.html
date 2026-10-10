@@ -1,18 +1,15 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WORDS IN COMMON</title><style>:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#101014;color:#eae8e2;font-family:system-ui,-apple-system,sans-serif;overflow:hidden}#stage{position:fixed;inset:0;overflow:hidden}.word{position:absolute;white-space:nowrap;pointer-events:none;font-family:Georgia,'Yu Mincho',serif;will-change:transform;transform-origin:center}#ui{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:min(94vw,580px);background:#202026e8;border:1px solid #45454b;border-radius:18px;padding:14px;backdrop-filter:blur(12px)}form{display:flex;gap:8px}input{flex:1;min-width:0;padding:13px;background:#111116;color:white;border:1px solid #56565d;border-radius:10px;font-size:16px}button{padding:12px 17px;border:0;border-radius:10px;background:#eae8e2;color:#151519;font-weight:600;cursor:pointer}button:disabled{opacity:.5}#status{font-size:12px;color:#b6b4b0;margin:0 0 10px}#info{font-size:11px;color:#b6b4b0;margin:9px 0 0}#title{position:fixed;top:22px;left:24px;letter-spacing:.2em;font-size:11px;color:#a9a6a3}#notice{position:fixed;top:22px;right:20px;font-size:12px;color:#b6b4b0}#setup{position:fixed;inset:0;z-index:10;background:#101014;display:flex;align-items:center;justify-content:center;padding:24px}#setup article{max-width:540px;line-height:1.8}code{font-size:12px;word-break:break-all;color:#d8d3bd}a{color:#d8d3bd}#setup h1{font-size:24px;font-weight:400}#setup p{color:#c3c0b9}#setup textarea{width:100%;height:180px;background:#202026;color:#fff;border:1px solid #666;border-radius:8px;padding:12px;font:12px monospace}#setup button{margin-top:10px}#setup small{display:block;color:#aaa;margin-top:8px}#ui{z-index:7}#title,#notice{z-index:5}
-/* Participant-only transmission interface */
+/* Standard mobile form; no pan/zoom or full-screen repositioning. */
 body.participant #stage,body.participant #title,body.participant #notice{display:none!important}
-body.participant{background:#101014;overflow:hidden}
-body.participant #ui{position:fixed;inset:0;transform:none;width:100%;height:100%;height:100dvh;max-width:none;border:0;border-radius:0;background:transparent;backdrop-filter:none;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:7}
+body.participant{overflow:hidden;background:#101014}
+body.participant #ui{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));top:auto;right:auto;transform:translateX(-50%);width:min(94vw,580px);height:auto;max-width:none;display:block;padding:14px;background:#202026e8;border:1px solid #45454b;border-radius:18px;backdrop-filter:blur(12px);z-index:7}
 body.participant #ui[hidden]{display:none}
-body.participant #status{position:absolute;top:calc(env(safe-area-inset-top) + 28px);left:0;width:100%;text-align:center;font-size:11px;letter-spacing:.15em;color:#a9a6a3}
-body.participant #ui::before{content:'WORDS IN COMMON';position:absolute;top:24%;left:0;width:100%;text-align:center;letter-spacing:.24em;font-size:13px;color:#eae8e2}
-body.participant #ui::after{content:'A WORD TO THE WORLD';position:absolute;top:calc(24% + 35px);left:0;width:100%;text-align:center;letter-spacing:.16em;font-size:10px;color:#77777f}
-body.participant #form{position:absolute;left:7%;right:7%;top:44%;display:flex;flex-direction:column;gap:18px}
-body.participant #input{width:100%;min-height:66px;text-align:center;background:transparent;border:0;border-bottom:1px solid #6e6b70;border-radius:0;color:#f1eee7;font-family:Georgia,'Yu Mincho',serif;font-size:clamp(22px,7vw,36px);outline:none;box-shadow:none}
-body.participant #input:focus{border-bottom-color:#f1eee7}
-body.participant #input::placeholder{color:#77777f;font-size:17px;letter-spacing:.08em}
-body.participant #send{width:100%;min-height:52px;border-radius:999px;letter-spacing:.18em;font-size:12px}
-body.participant #info{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 30px);left:0;width:100%;text-align:center;letter-spacing:.05em}
+body.participant #form{position:static;display:flex;flex-direction:row;gap:8px}
+body.participant #input{flex:1;min-width:0;width:auto;min-height:0;padding:13px;font-family:system-ui,-apple-system,sans-serif;font-size:16px;text-align:left;background:#111116;border:1px solid #56565d;border-radius:10px;color:#fff;box-shadow:none}
+body.participant #send{width:auto;min-height:0;border-radius:10px;letter-spacing:normal;font-size:14px}
+body.participant #status{position:static;width:auto;text-align:left;letter-spacing:normal}
+body.participant #info{position:static;width:auto;text-align:left;letter-spacing:normal}
+@media(max-width:380px){body.participant #ui{bottom:calc(12px + env(safe-area-inset-bottom))}}
 #flightLayer{display:none;position:fixed;inset:0;z-index:12;pointer-events:none;overflow:hidden;perspective:650px}
 body.participant #flightLayer{display:block}
 .flightWord{position:absolute;left:50%;top:49%;white-space:nowrap;font-family:Georgia,'Yu Mincho',serif;color:#f1eee7;font-size:clamp(27px,9vw,52px);max-width:95vw;text-overflow:ellipsis;overflow:hidden;transform:translate(-50%,-50%) scale(.75);opacity:0;filter:blur(0);animation:wordRelease 1450ms cubic-bezier(.2,.7,.2,1) forwards}
