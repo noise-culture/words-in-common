@@ -145,92 +145,45 @@ function applyDisplay(data){
 
 function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
 function rand(seed,n){let x=Math.sin(seed*0.0001+n*78.233)*43758.5453123;return x-Math.floor(x)}
-// Soft flocking: wander slowly, separate when close, and stay inside the projection.
-let previousWidth=0,previousHeight=0;
+// Independent, full-screen drifting. Long and short words have equal motion.
+// Motion is deterministic across projector clients and never accumulates forces.
 function draw(){
- const t=motionTime;
- if(!projector){return}
+ if(!projector)return;
  const W=stage.clientWidth,H=stage.clientHeight;
  if(!W||!H)return;
- const scaleX=previousWidth?W/previousWidth:1,scaleY=previousHeight?H/previousHeight:1;
- previousWidth=W;previousHeight=H;
- const flock=[...items.values()];
- // Fit long submissions inside the projector without changing their content.
- // Recalculate on resize and whenever the admin changes font size.
- const maxTextWidth=Math.max(80,W*.86);
- for(const obj of flock){
-  const el=obj.el;
-  const base=(18+rand(obj.seed,7)*34)*display.fontSize;
-  el.style.fontSize=base+'px';
-  const naturalWidth=el.scrollWidth;
-  if(naturalWidth>maxTextWidth){
-   el.style.fontSize=Math.max(7,base*maxTextWidth/naturalWidth*.97)+'px';
-  }
- }
- for(const obj of flock){
+ const t=motionTime;
+ for(const obj of items.values()){
   const {el,seed}=obj;
-  obj.w=el.offsetWidth;obj.h=el.offsetHeight;
-  if(obj.x===undefined){obj.x=W*(.12+rand(seed,1)*.76);obj.y=H*(.12+rand(seed,2)*.76);obj.vx=0;obj.vy=0}
-  else if(scaleX!==1||scaleY!==1){obj.x*=scaleX;obj.y*=scaleY}
- }
- // Spatial hash: only nearby words need to repel one another.
- const cellSize=Math.max(170,...flock.map(o=>o.w/2+40)),grid=new Map();
- for(let i=0;i<flock.length;i++){
-  const o=flock[i],cx=Math.floor(o.x/cellSize),cy=Math.floor(o.y/cellSize);
-  const key=cx+','+cy;if(!grid.has(key))grid.set(key,[]);grid.get(key).push(i);
- }
- const fx=new Float32Array(flock.length),fy=new Float32Array(flock.length);
- for(let i=0;i<flock.length;i++){
-  const a=flock[i],cx=Math.floor(a.x/cellSize),cy=Math.floor(a.y/cellSize);
-  // Very slow independent wandering; neighboring words repel each other.
-  fx[i]=Math.sin(t*.17+rand(a.seed,3)*6.283)*.055;
-  fy[i]=Math.cos(t*.14+rand(a.seed,4)*6.283)*.055;
-  const marginX=Math.min(W*.48,a.w/2+18),marginY=Math.min(H*.48,a.h/2+18);
-  if(a.x<marginX)fx[i]+=(marginX-a.x)*.006;
-  if(a.x>W-marginX)fx[i]-=(a.x-(W-marginX))*.006;
-  if(a.y<marginY)fy[i]+=(marginY-a.y)*.006;
-  if(a.y>H-marginY)fy[i]-=(a.y-(H-marginY))*.006;
-  for(let gx=cx-2;gx<=cx+2;gx++)for(let gy=cy-2;gy<=cy+2;gy++){
-   const neighbors=grid.get(gx+','+gy);if(!neighbors)continue;
-   for(const j of neighbors){if(j<=i)continue;
-    const b=flock[j],dx=b.x-a.x,dy=b.y-a.y;
-    const safeX=(a.w+b.w)/2+17,safeY=(a.h+b.h)/2+13;
-    const overlapX=safeX-Math.abs(dx),overlapY=safeY-Math.abs(dy);
-    if(overlapX<=0||overlapY<=0)continue;
-    const direction=(a.seed<b.seed?-1:1);
-    if(overlapX/safeX<overlapY/safeY){
-     const push=Math.min(2.5,overlapX*.027);
-     const sign=dx===0?direction:Math.sign(dx);
-     fx[i]-=sign*push;fx[j]+=sign*push;
-    }else{
-     const push=Math.min(2.5,overlapY*.055);
-     const sign=dy===0?direction:Math.sign(dy);
-     fy[i]-=sign*push;fy[j]+=sign*push;
-    }
+  const base=(18+rand(seed,7)*34)*display.fontSize;
+  const maxWidth=Math.max(80,W*.86);
+  // Measure at the intended font size, then shrink only if it would clip.
+  const fitKey=base.toFixed(2)+'/'+Math.round(maxWidth)+'/'+el.textContent;
+  if(obj.fitKey!==fitKey){
+   el.style.fontSize=base+'px';
+   const naturalWidth=el.scrollWidth;
+   if(naturalWidth>maxWidth){
+    el.style.fontSize=Math.max(7,base*maxWidth/naturalWidth*.97)+'px';
    }
+   obj.fitKey=fitKey;
+   obj.w=el.offsetWidth;obj.h=el.offsetHeight;
   }
- }
- for(let i=0;i<flock.length;i++){
-  const o=flock[i];
-  if(!display.paused){
-   // Speed is already applied to motionTime; separate by frame time for stable movement.
-   const dt=Math.min((lastFrame?frameDelta:1/60)*60,2);
-   o.vx=(o.vx+fx[i]*dt)*.91;o.vy=(o.vy+fy[i]*dt)*.91;
-   const maxV=1.55*Math.max(.1,display.speed);
-   const mag=Math.hypot(o.vx,o.vy);
-   if(mag>maxV){o.vx*=maxV/mag;o.vy*=maxV/mag}
-   o.x+=o.vx*dt;o.y+=o.vy*dt;
-  }
-  o.x=Math.max(o.w/2+6,Math.min(W-o.w/2-6,o.x));
-  o.y=Math.max(Math.min(H*.48,o.h/2+6),Math.min(H-Math.min(H*.48,o.h/2+6),o.y));
-  o.el.style.left=o.x+'px';o.el.style.top=o.y+'px';
-  o.el.style.transform='translate(-50%,-50%)';
-  o.el.style.opacity=String(.74+Math.sin(t*.24+rand(o.seed,6)*6.28)*.13);
+  const halfW=Math.min(W*.48,(obj.w||0)/2+8);
+  const halfH=Math.min(H*.48,(obj.h||0)/2+8);
+  const spanX=Math.max(0,W/2-halfW);
+  const spanY=Math.max(0,H/2-halfH);
+  // Different phases and periods prevent synchronized motion or clustering.
+  const p1=rand(seed,1)*Math.PI*2,p2=rand(seed,2)*Math.PI*2;
+  const p3=rand(seed,3)*Math.PI*2,p4=rand(seed,4)*Math.PI*2;
+  const x=W/2+spanX*(.74*Math.sin(t*(.19+rand(seed,5)*.10)+p1)+.26*Math.sin(t*(.09+rand(seed,6)*.07)+p2));
+  const y=H/2+spanY*(.73*Math.sin(t*(.15+rand(seed,8)*.09)+p3)+.27*Math.cos(t*(.075+rand(seed,9)*.055)+p4));
+  el.style.left=x+'px';el.style.top=y+'px';
+  el.style.transform='translate(-50%,-50%)';
+  el.style.opacity=String(.76+Math.sin(t*.24+rand(seed,10)*6.28)*.12);
  }
 }
 let frameDelta=1/60;
 function animate(now){frameDelta=lastFrame?Math.min((now-lastFrame)/1000,.05):1/60;if(!display.paused)motionTime+=frameDelta*display.speed;lastFrame=now;draw();requestAnimationFrame(animate)}requestAnimationFrame(animate);
-function render(docs){latestDocs=docs;const keep=new Set();for(const doc of docs.slice(0,display.maxWords)){const data=doc.data();if(typeof data.text!=='string'||data.hidden===true)continue;const id=doc.id;keep.add(id);if(!items.has(id)){const seed=(typeof data.seed==='number' ? data.seed : hash(id)),el=document.createElement('div');el.className='word';el.textContent=data.text;stage.append(el);items.set(id,{el,seed})}const obj=items.get(id);obj.el.style.fontSize=((18+rand(obj.seed,7)*34)*display.fontSize)+'px';obj.el.style.color=display.textColor;}for(const [id,obj] of items){if(!keep.has(id)){obj.el.remove();items.delete(id)}}if($('notice'))$('notice').textContent=`${items.size} WORDS`}
+function render(docs){latestDocs=docs;const keep=new Set();for(const doc of docs.slice(0,display.maxWords)){const data=doc.data();if(typeof data.text!=='string'||data.hidden===true)continue;const id=doc.id;keep.add(id);if(!items.has(id)){const seed=(typeof data.seed==='number' ? data.seed : hash(id)),el=document.createElement('div');el.className='word';el.textContent=data.text;stage.append(el);items.set(id,{el,seed})}const obj=items.get(id);obj.fitKey=null;obj.el.style.color=display.textColor;}for(const [id,obj] of items){if(!keep.has(id)){obj.el.remove();items.delete(id)}}if($('notice'))$('notice').textContent=`${items.size} WORDS`}
 async function start(cfg){$('setupError').textContent='接続しています…';try{if(!cfg.apiKey||!cfg.projectId||!cfg.appId)throw Error('apiKey、projectId、appIdが必要です。');const app=initializeApp(cfg);db=getFirestore(app);auth=getAuth(app);await signInAnonymously(auth);localStorage.setItem('words-firebase-config',JSON.stringify(cfg));$('setup').hidden=true;$('setup').style.display='none';if($('ui'))$('ui').hidden=false;window.dispatchEvent(new Event('resize'));onSnapshot(doc(db,'settings','display'),snap=>{settingsError='';applyDisplay(snap.exists()?snap.data():{})},err=>{settingsError='演出設定の同期エラー: '+err.message;if($('status'))$('status').textContent=settingsError;console.error(settingsError)});onSnapshot(query(collection(db,'words'),orderBy('createdAt','desc'),limit(500)),snap=>{if($('status'))$('status').textContent=settingsError||'オンライン · 全員と同期中';render(snap.docs)},err=>{if($('status'))$('status').textContent='同期エラー: '+err.message});}catch(e){$('setupError').textContent='接続できません: '+e.message}}
 $('connect').onclick=()=>{try{start(JSON.parse($('config').value))}catch(e){$('setupError').textContent='JSONの形式をご確認ください。'}};
 let launchCleanup=null;
