@@ -59,28 +59,27 @@ body.participant.launching #elevatorLight{animation:innerLight 2600ms ease-in-ou
 @keyframes innerLight{0%{opacity:.12}40%,85%{opacity:1}100%{opacity:.12}}
 @media(prefers-reduced-motion:reduce){body.participant.launching #doorLeft,body.participant.launching #doorRight,body.participant.launching #elevatorLight,#flightLayer .flightWord,#flightLayer .doorGlow,#flightLayer .lightFlood{animation-duration:.4s!important}}
 
-/* Subtle ambient elevator motion. Never transforms the viewport or the form. */
-body.participant:not(.launching) .elevatorDoor{
- animation:liftMetalBreathe 9s ease-in-out infinite;
+/* Faulty elevator idle behavior; all transforms are confined to the doors. */
+body.participant:not(.launching) #doorLeft{animation:doorFaultLeft 9.4s linear infinite,liftMetalBreathe 9s ease-in-out infinite}
+body.participant:not(.launching) #doorRight{animation:doorFaultRight 9.4s linear infinite,liftMetalBreathe 9s ease-in-out infinite}
+@keyframes doorFaultLeft{
+ 0%,29%,29.8%,30.5%,31.4%,32.5%,33.2%,34%,69%,69.8%,70.7%,71.6%,72.8%,73.7%,74.6%,100%{transform:translateX(0)}
+ 29.4%{transform:translateX(-3px)}30.1%{transform:translateX(-7px)}30.9%{transform:translateX(-4px)}31.8%{transform:translateX(-10px)}32.9%{transform:translateX(-6px)}33.6%{transform:translateX(-2px)}
+ 69.4%{transform:translateX(-4px)}70.2%{transform:translateX(-9px)}71.1%{transform:translateX(-5px)}72.1%{transform:translateX(-12px)}73.2%{transform:translateX(-5px)}74.1%{transform:translateX(-2px)}
 }
-@keyframes liftMetalBreathe{
- 0%,100%{filter:brightness(1)}
- 45%{filter:brightness(1.10)}
- 65%{filter:brightness(1.035)}
+@keyframes doorFaultRight{
+ 0%,29%,29.8%,30.5%,31.4%,32.5%,33.2%,34%,69%,69.8%,70.7%,71.6%,72.8%,73.7%,74.6%,100%{transform:translateX(0)}
+ 29.4%{transform:translateX(3px)}30.1%{transform:translateX(7px)}30.9%{transform:translateX(4px)}31.8%{transform:translateX(10px)}32.9%{transform:translateX(6px)}33.6%{transform:translateX(2px)}
+ 69.4%{transform:translateX(4px)}70.2%{transform:translateX(9px)}71.1%{transform:translateX(5px)}72.1%{transform:translateX(12px)}73.2%{transform:translateX(5px)}74.1%{transform:translateX(2px)}
 }
-body.participant:not(.launching) #elevatorLight{
- animation:liftSeamGlow 8s ease-in-out infinite;
-}
-@keyframes liftSeamGlow{
- 0%,100%{opacity:.12}
- 50%{opacity:.22}
-}
-body.participant:not(.launching) #elevatorIndicator{
- animation:liftIndicatorPulse 6.5s ease-in-out infinite;
-}
-@keyframes liftIndicatorPulse{
- 0%,100%{filter:brightness(1)}
- 50%{filter:brightness(1.18)}
+@keyframes liftMetalBreathe{0%,100%{filter:brightness(1)}45%{filter:brightness(1.08)}65%{filter:brightness(1.025)}}
+body.participant:not(.launching) #elevatorLight{animation:liftSeamGlow 9.4s linear infinite}
+@keyframes liftSeamGlow{0%,28%,35%,68%,76%,100%{opacity:.12}30%,32%,71%,73%{opacity:.34}}
+body.participant:not(.launching) #elevatorIndicator{animation:liftIndicatorFlicker 5.3s linear infinite}
+@keyframes liftIndicatorFlicker{
+ 0%,8%,10%,16%,17%,25%,26%,43%,44%,47%,48%,66%,67%,75%,76%,89%,90%,100%{opacity:1;filter:brightness(1.25)}
+ 8.5%,16.5%,25.5%,43.5%,47.5%,66.5%,75.5%,89.5%{opacity:.08;filter:brightness(.25)}
+ 9%,17.3%,26.3%,44.3%,48.3%,67.3%,76.3%,90.3%{opacity:.55;filter:brightness(.7)}
 }
 @media(prefers-reduced-motion:reduce){
  body.participant:not(.launching) .elevatorDoor,
