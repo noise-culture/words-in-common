@@ -49,11 +49,26 @@ const stageLayers=[$('stage-a'),$('stage-b')];
 const stageInterval=preview&&params.get('fade-test')==='1'?5000:60000;
 const stagePhotoDuration=preview&&params.get('fade-test')==='1'?8000:180000;
 const failedPhotos=new Set();
+// Retain the newest accepted photo and its retirement state across reloads.
+const stageStateKey='noise-stage-once-v1'+(preview?'-preview':'');
+let stageWatermark=null,stageSynced=false;
+if(projector&&!preview){try{const saved=JSON.parse(localStorage.getItem(stageStateKey)||'null');if(saved&&typeof saved.key==='string'&&Number.isFinite(saved.postedAt))stageWatermark=saved;}catch{}}
+function stageRemember(p,retired=false){stageWatermark={key:p.key,postedAt:p.postedAt,retired};if(!preview){try{localStorage.setItem(stageStateKey,JSON.stringify(stageWatermark));}catch{}}}
+function stageNewer(p,w){return !w||p.postedAt>w.postedAt||(p.postedAt===w.postedAt&&p.key>w.key);}
+function stageEligible(now){
+ if(!stageSynced)return null;
+ const p=stagePhotos[0];
+ if(p&&stageNewer(p,stageWatermark))stageRemember(p,p.expiresAt<=now||p.hidden);
+ if(!stageWatermark||stageWatermark.retired)return null;
+ const active=stagePhotos.find(q=>q.key===stageWatermark.key);
+ if(!active||active.hidden||active.expiresAt<=now||failedPhotos.has(active.key)){stageRemember(stageWatermark,true);return null;}
+ return active;
+}
 function stageSchedule(delay){clearTimeout(stageTimer);if(projector)stageTimer=setTimeout(stageReconcile,Math.max(0,delay));}
 function stageReset(){clearTimeout(stageTimer);clearTimeout(stageFinish);stageGeneration++;stageIncoming=null;stageCurrent=originals[0];stageActive=0;for(const [i,el] of stageLayers.entries()){el.style.transition='none';el.style.opacity=i===0?'1':'0';el.style.zIndex=i===0?'1':'0';if(i===0)el.src=originals[0].src;else el.removeAttribute('src');}stageDefaultNextAt=Date.now()+stageInterval;}
 function stageShow(item){if(!projector||!item||stageIncoming||item.key===stageCurrent.key)return;clearTimeout(stageTimer);stageIncoming=item;const token=++stageGeneration;const next=1-stageActive,el=stageLayers[next],old=stageLayers[stageActive];const probe=new Image();probe.onload=()=>{if(token!==stageGeneration)return;if(item.expiresAt&&item.expiresAt<=Date.now()){stageIncoming=null;stageReconcile();return;}if(!item.expiresAt)stageDefaultNextAt=Date.now()+stageInterval;el.style.transition='none';el.style.opacity='0';el.style.zIndex='2';el.src=item.src;void el.offsetWidth;el.style.transition='opacity 3s ease-in-out';el.style.opacity='1';stageFinish=setTimeout(()=>{if(token!==stageGeneration)return;old.style.transition='none';old.style.opacity='0';old.style.zIndex='0';old.removeAttribute('src');el.style.zIndex='1';stageActive=next;stageCurrent=item;stageIncoming=null;stageReconcile();},3050);};probe.onerror=()=>{if(token!==stageGeneration)return;stageIncoming=null;if(item.expiresAt){failedPhotos.add(item.key);stageReconcile();}else{stageReset();stageSchedule(stageInterval);}};probe.src=item.src;}
-function stageReconcile(){if(!projector)return;clearTimeout(stageTimer);if(stageIncoming)return;const now=Date.now();const newest=stagePhotos.find(p=>p.expiresAt>now&&!failedPhotos.has(p.key));if(newest){if(stageCurrent.key!==newest.key)stageShow(newest);else stageSchedule(newest.expiresAt-now);return;}if(stageCurrent.expiresAt){stageShow(originals[0]);return;}if(now>=stageDefaultNextAt){stageShow(originals[stageCurrent.key==='cover-1'?1:0]);}else stageSchedule(stageDefaultNextAt-now);}
-function syncStage(docs){if(!projector)return;stagePhotos=docs.flatMap(d=>{const v=d.data();const postedAt=v.createdAt?.toMillis?.();return v.hidden!==true&&validPhoto(v.image)&&Number.isFinite(postedAt)?[{key:'post-'+d.id,src:v.image,expiresAt:postedAt+stagePhotoDuration}]:[];}).sort((a,b)=>b.expiresAt-a.expiresAt);const removed=p=>p?.expiresAt&&!stagePhotos.some(q=>q.key===p.key);if(removed(stageCurrent)||removed(stageIncoming))stageReset();stageReconcile();}
+function stageReconcile(){if(!projector)return;clearTimeout(stageTimer);if(stageIncoming)return;const now=Date.now();const newest=stageEligible(now);if(newest){if(stageCurrent.key!==newest.key)stageShow(newest);else stageSchedule(newest.expiresAt-now);return;}if(stageCurrent.expiresAt){stageShow(originals[0]);return;}if(now>=stageDefaultNextAt){stageShow(originals[stageCurrent.key==='cover-1'?1:0]);}else stageSchedule(stageDefaultNextAt-now);}
+function syncStage(docs){if(!projector)return;stageSynced=true;stagePhotos=docs.flatMap(d=>{const v=d.data();const postedAt=v.createdAt?.toMillis?.();return validPhoto(v.image)&&Number.isFinite(postedAt)?[{key:'post-'+d.id,src:v.image,postedAt,hidden:v.hidden===true,expiresAt:postedAt+stagePhotoDuration}]:[];}).sort((a,b)=>b.postedAt-a.postedAt||(a.key<b.key?1:a.key>b.key?-1:0));const removed=p=>p?.expiresAt&&!stagePhotos.some(q=>q.key===p.key&&!q.hidden);if(removed(stageCurrent)||removed(stageIncoming))stageReset();stageReconcile();}
 if(projector){stageDefaultNextAt=Date.now()+stageInterval;stageSchedule(stageInterval);document.addEventListener('visibilitychange',()=>{if(!document.hidden)stageReconcile();});}
 
 function makeRow(id,data){const row=document.createElement('div');row.className='message';const a=document.createElement('span');a.className='avatar';a.textContent='A';a.setAttribute('aria-hidden','true');const b=document.createElement('div');b.className='message-body';const author=document.createElement('div');author.className='author';const text=document.createElement('div');text.className='message-text';const notice=document.createElement('div');notice.className='photo-notice';notice.textContent='写真を投稿しました';b.append(author,text,notice);row.append(a,b);const obj={row,a,author,text,notice};updateRow(obj,id,data);return obj}
