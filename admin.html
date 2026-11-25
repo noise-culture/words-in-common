@@ -4,12 +4,12 @@
 <div id="app"><header><h1>WORDS IN COMMON / CONTROL</h1><div><span id="who"></span> <button class="alt" id="signOut">ログアウト</button></div></header><main>
 <section class="panel"><h2>LIVE STATUS</h2><div class="stat" id="count">—</div><p class="hint">最新の投稿（最大500件取得）</p><p id="connection">接続中</p><p><a href="./?view=projector" target="_blank" rel="noopener">プロジェクター画面を開く ↗</a></p><p><a href="./" target="_blank" rel="noopener">参加者画面を開く ↗</a></p></section>
 <section class="panel"><h2>DISPLAY CONTROLS</h2><label>チャットの移動速度 <span id="speedValue"></span><input id="speed" type="range" min="0.1" max="3" step="0.1"></label><label>文字サイズ <span id="sizeValue"></span><input id="size" type="range" min="0.5" max="2" step="0.1"></label><label>最大表示数 <span id="maxWordsValue"></span><input id="maxWords" type="range" min="10" max="300" step="5"></label><div class="inline"><label>背景色 <input id="background" type="color"></label><label>文字色 <input id="textColor" type="color"></label></div><div class="inline"><button id="paused" class="alt">一時停止</button><button id="hidden" class="alt">チャットを非表示</button></div><p class="hint">投影画面のチャットを調整します。移動速度は新着投稿時のスクロール速度です。スライダーは離した時に保存されます。</p></section>
-<section class="panel wide"><div class="inline"><h2>POST MODERATION</h2><span id="postCount"></span></div><div id="posts"></div></section>
+<section class="panel wide"><div class="inline"><h2>POST MODERATION</h2><span id="postCount"></span></div><div class="inline" style="margin:12px 0;flex-wrap:wrap"><button id="deleteAll" class="danger" disabled>全コメント削除</button><span class="hint" id="deleteStatus" role="status" aria-live="polite"></span></div><p class="hint">非表示の投稿も含め、保存済みのコメントを一括削除します。元に戻せません。</p><div id="posts"></div></section>
 </main></div>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {getAuth,GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
-import {getFirestore,collection,doc,onSnapshot,query,orderBy,limit,updateDoc,deleteDoc,setDoc,getDoc} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
+import {getFirestore,collection,doc,onSnapshot,query,orderBy,limit,updateDoc,deleteDoc,setDoc,getDoc,getDocsFromServer,writeBatch} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 const firebaseConfig = {
  apiKey: "AIzaSyACLWV4mkQXTbfS7sc0ZKZ_c8g3n1sbmkc",
  authDomain: "words-in-common.firebaseapp.com",
@@ -19,13 +19,36 @@ const firebaseConfig = {
  appId: "1:58256731398:web:1f850c739b5f78e6340287"
 };
 const app=initializeApp(firebaseConfig),db=getFirestore(app),auth=getAuth(app),$=id=>document.getElementById(id);
+let deletingAll=false;
 let admin=false,postsUnsub=()=>{},settingsUnsub=()=>{},current={speed:1,size:1,maxWords:150,background:'#0f0f0f',textColor:'#eeeeee',paused:false,hidden:false};
 const err=e=>{$('error').textContent=e?.message||String(e)};
 $('signIn').onclick=async()=>{try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){err(e)}};
 $('signOut').onclick=()=>signOut(auth);
-onAuthStateChanged(auth,async user=>{postsUnsub();settingsUnsub();admin=false;$('app').style.display='none';$('login').style.display='block';if(!user){$('error').textContent='';return} $('error').textContent=`UID: ${user.uid}\n管理者登録が済んでいない場合は、このUIDをFirestoreルールの ADMIN_UID に設定してください。`;
-try{await getDoc(doc(db,'adminAccess','verification'));settingsUnsub=onSnapshot(doc(db,'settings','display'),snap=>{admin=true;$('app').style.display='block';$('login').style.display='none';$('who').textContent=user.email||'Admin';current={...current,...(snap.data()||{})};paint()},e=>err('管理権限を確認できません: '+e.message));
+onAuthStateChanged(auth,async user=>{postsUnsub();settingsUnsub();admin=false;$('deleteAll').disabled=true;$('app').style.display='none';$('login').style.display='block';if(!user){$('error').textContent='';return} $('error').textContent=`UID: ${user.uid}\n管理者登録が済んでいない場合は、このUIDをFirestoreルールの ADMIN_UID に設定してください。`;
+try{await getDoc(doc(db,'adminAccess','verification'));settingsUnsub=onSnapshot(doc(db,'settings','display'),snap=>{admin=true;$('deleteAll').disabled=deletingAll;$('app').style.display='block';$('login').style.display='none';$('who').textContent=user.email||'Admin';current={...current,...(snap.data()||{})};paint()},e=>err('管理権限を確認できません: '+e.message));
 postsUnsub=onSnapshot(query(collection(db,'words'),orderBy('createdAt','desc'),limit(500)),snap=>{const docs=snap.docs;$('count').textContent=docs.length;$('postCount').textContent=`${docs.length} 件`;const root=$('posts');root.replaceChildren();for(const d of docs){const data=d.data(),row=document.createElement('div');row.className='post';const info=document.createElement('div'),word=document.createElement('div'),small=document.createElement('small');word.className='word';word.textContent=data.text||'';small.textContent=d.id+(data.hidden?' · 非表示':'');info.append(word,small);const actions=document.createElement('div');actions.className='actions';const toggle=document.createElement('button');toggle.className='alt';toggle.textContent=data.hidden?'再表示':'非表示';toggle.onclick=()=>updateDoc(doc(db,'words',d.id),{hidden:!data.hidden}).catch(e=>alert(e.message));const del=document.createElement('button');del.className='danger';del.textContent='削除';del.onclick=()=>{if(confirm('この投稿を完全に削除しますか？'))deleteDoc(doc(db,'words',d.id)).catch(e=>alert(e.message))};actions.append(toggle,del);row.append(info,actions);root.append(row)}$('connection').textContent='オンライン'},e=>{$('connection').textContent='投稿取得エラー: '+e.message});}catch(e){err(e)}});
+$('deleteAll').onclick=async()=>{
+ if(!admin||deletingAll)return;
+ if(!confirm('保存済みの全コメント（非表示の投稿を含む）を完全に削除しますか？\nこの操作は取り消せません。'))return;
+ deletingAll=true;$('deleteAll').disabled=true;$('signOut').disabled=true;
+ const uid=auth.currentUser?.uid;let deleted=0,total=null;
+ const report=message=>{$('deleteStatus').textContent=message};
+ try{
+  report('削除対象を取得中…');
+  const snapshot=await getDocsFromServer(collection(db,'words'));
+  total=snapshot.size;
+  if(!total){report('削除対象のコメントはありません。');return;}
+  for(let i=0;i<total;i+=400){
+   if(!admin||auth.currentUser?.uid!==uid)throw new Error('管理者の認証が変更されました。');
+   const chunk=snapshot.docs.slice(i,i+400),batch=writeBatch(db);
+   for(const d of chunk)batch.delete(d.ref);
+   report(`削除中：${deleted} / ${total} 件`);
+   await batch.commit();deleted+=chunk.length;
+  }
+  report(`${deleted} 件を削除しました。`);
+ }catch(e){report(`削除を完了できませんでした（完了 ${deleted} 件）：${e.message}`);}
+ finally{deletingAll=false;$('deleteAll').disabled=!admin;$('signOut').disabled=false;}
+};
 function paint(){for(const k of ['speed','size','maxWords','background','textColor']){$(k).value=current[k];const label=$(k+'Value');if(label)label.textContent=current[k]}for(const k of ['paused','hidden']){$(k).className=current[k]?'active':'alt';$(k).textContent=k==='paused'?(current[k]?'再開':'一時停止'):(current[k]?'再表示':'チャットを非表示')}}
 async function save(patch){if(!admin)return;try{await setDoc(doc(db,'settings','display'),{...current,...patch})}catch(e){alert('設定保存エラー: '+e.message)}}
 for(const k of ['speed','size','maxWords']){$(k).onchange=e=>save({[k]:Number(e.target.value)});$(k).oninput=e=>{$(k+'Value').textContent=e.target.value}}
